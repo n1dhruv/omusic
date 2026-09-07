@@ -52,6 +52,24 @@ else
     echo -e "${C_GREEN}✔${C_RESET} All runtime dependencies present (mpv, yt-dlp)."
 fi
 
+# Detect if running from local repo or piped from curl
+TMP_DIR=""
+cleanup() {
+    if [[ -n "${TMP_DIR}" && -d "${TMP_DIR}" ]]; then
+        rm -rf "${TMP_DIR}"
+    fi
+}
+trap cleanup EXIT
+
+if [[ -f "Cargo.toml" && -d "src" ]]; then
+    SRC_DIR="$(pwd)"
+else
+    TMP_DIR="$(mktemp -d -t omusic-install-XXXXXX)"
+    echo -e "${C_DARK}Fetching omusic from GitHub...${C_RESET}"
+    git clone --depth=1 "https://github.com/n1dhruv/omusic.git" "${TMP_DIR}"
+    SRC_DIR="${TMP_DIR}"
+fi
+
 # 2. Binary Installation
 echo -e "\n${C_BOLD}[2/3] Installing omusic binary...${C_RESET}"
 mkdir -p "${BIN_DIR}"
@@ -59,21 +77,22 @@ mkdir -p "${BIN_DIR}"
 # Stop any currently running instance so the file is not locked
 systemctl --user stop omusic.service 2>/dev/null || true
 pkill -9 -f "omusic" 2>/dev/null || true
+sleep 0.5
 
-if [[ -f "target/release/omusic" ]]; then
-    install -m 755 "target/release/omusic" "${BIN_DIR}/omusic"
-elif [[ -f "target/debug/omusic" ]]; then
-    install -m 755 "target/debug/omusic" "${BIN_DIR}/omusic"
+if [[ -f "${SRC_DIR}/target/release/omusic" ]]; then
+    install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
+elif [[ -f "${SRC_DIR}/target/debug/omusic" ]]; then
+    install -m 755 "${SRC_DIR}/target/debug/omusic" "${BIN_DIR}/omusic"
 elif need_cmd cargo; then
-    echo -e "${C_DARK}Compiling release binary...${C_RESET}"
-    cargo build --release
-    install -m 755 "target/release/omusic" "${BIN_DIR}/omusic"
+    echo -e "${C_DARK}Compiling release binary with Cargo...${C_RESET}"
+    (cd "${SRC_DIR}" && cargo build --release)
+    install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
 else
     echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
     RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
     curl -fsSL "${RELEASE_URL}" | tar -xz -C "${BIN_DIR}"
+    chmod +x "${BIN_DIR}/omusic"
 fi
-chmod +x "${BIN_DIR}/omusic"
 
 # PURGE ANY OLD DESKTOP APPLICATION FILES (Ensures zero indexing in Rofi / GNOME / KDE)
 rm -f "${HOME}/.local/share/applications/omusic.desktop"
