@@ -136,7 +136,7 @@ fi
 
 # Start omusic in the menubar right away
 pkill -f "omusic/app/main.py" 2>/dev/null || true
-nohup "${BIN_DIR}/omusic" --tray >/dev/null 2>&1 &
+nohup "${BIN_DIR}/omusic" --tray </dev/null >/dev/null 2>&1 & disown
 
 echo -e "\n${C_MINT}${C_BOLD}✔ omusic is now running in your menu bar!${C_RESET}"
 echo -e "${C_DARK}Look at your top menu bar / system tray. Click the YouTube Music icon to drop down the player.${C_RESET}"
