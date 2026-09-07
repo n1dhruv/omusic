@@ -54,7 +54,6 @@ else
     echo -e "${C_GREEN}✔${C_RESET} All runtime dependencies present (mpv, yt-dlp)."
 fi
 
-# Detect if running from local repo or piped from curl
 TMP_DIR=""
 cleanup() {
     if [[ -n "${TMP_DIR}" && -d "${TMP_DIR}" ]]; then
@@ -63,42 +62,58 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [[ -f "Cargo.toml" && -d "src" ]]; then
-    SRC_DIR="$(pwd)"
-else
-    TMP_DIR="$(mktemp -d -t omusic-install-XXXXXX)"
-    echo -e "${C_DARK}Fetching omusic from GitHub...${C_RESET}"
-    git clone --depth=1 "https://github.com/n1dhruv/omusic.git" "${TMP_DIR}"
-    SRC_DIR="${TMP_DIR}"
-fi
+SRC_DIR="$(pwd)"
 
 # 2. Binary Installation
 echo -e "\n${C_BOLD}[2/3] Installing omusic binary...${C_RESET}"
 mkdir -p "${BIN_DIR}"
 
-# Stop any currently running instance so the file is not locked
+# Stop any currently running instance and unlink binary so it is never locked
 systemctl --user stop omusic.service 2>/dev/null || true
-pkill -9 -f "omusic" 2>/dev/null || true
+pkill -x omusic 2>/dev/null || true
 sleep 0.5
 rm -f "${BIN_DIR}/omusic"
 
+INSTALLED=0
+
+# Option A: Install from local build if present in current directory
 if [[ -f "${SRC_DIR}/target/release/omusic" ]]; then
     install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
+    INSTALLED=1
 elif [[ -f "${SRC_DIR}/target/debug/omusic" ]]; then
     install -m 755 "${SRC_DIR}/target/debug/omusic" "${BIN_DIR}/omusic"
-else
+    INSTALLED=1
+fi
+
+# Option B: Download pre-built release binary from GitHub (instant 2s install)
+if [[ ${INSTALLED} -eq 0 ]]; then
     echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
     RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
-    if curl -fsSL "${RELEASE_URL}" | tar --unlink-first -xz -C "${BIN_DIR}" 2>/dev/null; then
+    if curl -fsSL "${RELEASE_URL}" | tar --unlink-first -xz -C "${BIN_DIR}" 2>/dev/null && [[ -x "${BIN_DIR}/omusic" ]]; then
         chmod +x "${BIN_DIR}/omusic"
-    elif need_cmd cargo; then
+        INSTALLED=1
+    fi
+fi
+
+# Option C: Fallback to compiling with Cargo if pre-built download failed
+if [[ ${INSTALLED} -eq 0 ]]; then
+    if [[ ! -f "${SRC_DIR}/Cargo.toml" ]]; then
+        TMP_DIR="$(mktemp -d -t omusic-install-XXXXXX)"
+        echo -e "${C_DARK}Fetching source repository from GitHub...${C_RESET}"
+        git clone --depth=1 "https://github.com/n1dhruv/omusic.git" "${TMP_DIR}"
+        SRC_DIR="${TMP_DIR}"
+    fi
+    if need_cmd cargo; then
         echo -e "${C_DARK}Compiling release binary with Cargo...${C_RESET}"
         (cd "${SRC_DIR}" && cargo build --release)
         install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
-    else
-        echo -e "${C_RED}Error:${C_RESET} Failed to install omusic binary."
-        exit 1
+        INSTALLED=1
     fi
+fi
+
+if [[ ${INSTALLED} -eq 0 || ! -x "${BIN_DIR}/omusic" ]]; then
+    echo -e "${C_RED}Error:${C_RESET} Failed to install omusic binary."
+    exit 1
 fi
 
 # PURGE ANY OLD DESKTOP APPLICATION FILES (Ensures zero indexing in Rofi / GNOME / KDE)
