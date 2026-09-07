@@ -120,6 +120,24 @@ fi
 rm -f "${HOME}/.local/share/applications/omusic.desktop"
 rm -f "${HOME}/.config/autostart/omusic.desktop"
 
+# Install tray icon
+mkdir -p "${HOME}/.local/share/icons/hicolor/32x32/apps"
+if [[ -f "${SRC_DIR}/icons/tray.png" ]]; then
+    cp "${SRC_DIR}/icons/tray.png" "${HOME}/.local/share/icons/omusic.png"
+    cp "${SRC_DIR}/icons/tray.png" "${HOME}/.local/share/icons/hicolor/32x32/apps/omusic.png"
+fi
+
+# Configure Hyprland floating drop-down rule if Hyprland is present
+HYPR_CONFIG="${HOME}/.config/hypr/hyprland.lua"
+if [[ -f "${HYPR_CONFIG}" ]]; then
+    if ! grep -q 'o.window("^(omusic)$"' "${HYPR_CONFIG}"; then
+        echo -e "\n-- omusic: YouTube Music drop-down tray player\no.window(\"^(omusic)$\", { float = true, pin = true, tag = \"-default-opacity\" })" >> "${HYPR_CONFIG}"
+        if command -v hyprctl >/dev/null 2>&1; then
+            hyprctl reload >/dev/null 2>&1 || true
+        fi
+    fi
+fi
+
 # 3. Systemd User Service (Background tray autostart without desktop files)
 echo -e "\n${C_BOLD}[3/3] Configuring menu bar tray service...${C_RESET}"
 mkdir -p "${SYSTEMD_USER_DIR}"
