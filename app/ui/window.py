@@ -227,11 +227,11 @@ class YtMusicWindow(QWidget):
 
     # ---------------------------------------------------------------- open/close
 
-    def open(self) -> None:
+    def open(self, tray_geom: Optional[QRect] = None) -> None:
         if self._is_open:
             return
         self._is_open = True
-        self._center_on_screen()
+        self._anchor_to_menubar(tray_geom)
         self.show()
         self.raise_()
         self.activateWindow()
@@ -245,7 +245,8 @@ class YtMusicWindow(QWidget):
             return
         self._is_open = False
         self._fade_anim.stop()
-        self._fade_anim.finished.disconnect() if self._fade_anim.receivers(self._fade_anim.finished) else None
+        if self._fade_anim.receivers(self._fade_anim.finished):
+            self._fade_anim.finished.disconnect()
         self._fade_anim.setStartValue(self._opacity_effect.opacity())
         self._fade_anim.setEndValue(0.0)
         self._fade_anim.finished.connect(self._on_close_done)
@@ -258,20 +259,46 @@ class YtMusicWindow(QWidget):
             pass
         self.hide()
 
-    def toggle(self) -> None:
+    def toggle(self, tray_geom: Optional[QRect] = None) -> None:
         if self._is_open:
             self.close_window()
         else:
-            self.open()
+            self.open(tray_geom)
 
-    def _center_on_screen(self) -> None:
+    _last_tray_geom: Optional[QRect] = None
+
+    def _anchor_to_menubar(self, tray_geom: Optional[QRect] = None) -> None:
+        if tray_geom is not None and tray_geom.isValid() and tray_geom.width() > 0:
+            self._last_tray_geom = tray_geom
+        else:
+            tray_geom = self._last_tray_geom
+
         self.adjustSize()
         screen = QApplication.primaryScreen()
-        if screen:
-            sg = screen.availableGeometry()
-            x = sg.x() + (sg.width()  - self.width())  // 2
-            y = sg.y() + (sg.height() - self.height()) // 2
-            self.move(x, y)
+        if not screen:
+            return
+        sg = screen.availableGeometry()
+
+        w = self.width()
+        h = self.height()
+
+        if tray_geom is not None and tray_geom.isValid() and tray_geom.width() > 0:
+            # Horizontally align/center with the tray icon
+            x = tray_geom.center().x() - w // 2
+            # Clamp inside screen margins
+            x = max(sg.left() + S.sp(8), min(sg.right() - w - S.sp(8), x))
+
+            # Check if bar is at top or bottom
+            if tray_geom.top() < sg.center().y():
+                y = tray_geom.bottom() + S.sp(4)
+            else:
+                y = tray_geom.top() - h - S.sp(4)
+        else:
+            # Fallback: top right near menu bar
+            x = max(sg.left() + S.sp(8), sg.right() - w - S.sp(14))
+            y = sg.top() + S.sp(8)
+
+        self.move(x, y)
 
     # ---------------------------------------------------------------- mini mode
 

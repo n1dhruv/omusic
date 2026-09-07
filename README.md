@@ -5,8 +5,9 @@
 </p>
 
 <p align="center">
-  <b>A cyber-minimal, standalone YouTube Music desktop player for Linux.</b><br>
-  Runs natively on <b>Arch, Debian, Ubuntu, Fedora, openSUSE</b>, and any modern Linux distribution.
+  <b>A cyber-minimal YouTube Music Menu Bar Applet for Linux.</b><br>
+  Sits seamlessly in your top menu bar / system tray. Click to drop down the player.<br>
+  Works natively across <b>Arch, Debian, Ubuntu, Fedora, openSUSE</b>, and any modern Linux distribution.
 </p>
 
 <p align="center">

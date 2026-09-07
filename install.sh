@@ -100,14 +100,17 @@ fi
 "${INSTALL_DIR}/venv/bin/pip" install --quiet -r "${INSTALL_DIR}/backend/requirements.txt"
 echo -e "${C_GREEN}✔${C_RESET} Python dependencies installed."
 
-# 5. Install launcher & desktop integration
-echo -e "\n${C_BOLD}[4/4] Installing launcher and desktop shortcuts...${C_RESET}"
-mkdir -p "${BIN_DIR}" "${DESKTOP_DIR}" "${ICON_DIR}"
+AUTOSTART_DIR="${HOME}/.config/autostart"
+
+# 5. Install launcher, menubar autostart & desktop integration
+echo -e "\n${C_BOLD}[4/4] Setting up menu bar integration & autostart...${C_RESET}"
+mkdir -p "${BIN_DIR}" "${DESKTOP_DIR}" "${ICON_DIR}" "${AUTOSTART_DIR}"
 
 cp "${SRC_DIR}/bin/omusic" "${BIN_DIR}/omusic"
 chmod +x "${BIN_DIR}/omusic"
 
 cp "${SRC_DIR}/desktop/omusic.desktop" "${DESKTOP_DIR}/omusic.desktop"
+cp "${SRC_DIR}/desktop/omusic.desktop" "${AUTOSTART_DIR}/omusic.desktop"
 cp "${SRC_DIR}/desktop/omusic.svg" "${ICON_DIR}/omusic.svg"
 
 if need_cmd update-desktop-database; then
@@ -131,13 +134,18 @@ if [[ ":$PATH:" != *":${BIN_DIR}:"* ]]; then
     fi
 fi
 
-echo -e "\n${C_MINT}${C_BOLD}✔ omusic successfully installed!${C_RESET}"
-echo -e "${C_DARK}Run ${C_MINT}omusic${C_DARK} in your terminal or launch it from your application launcher.${C_RESET}"
-echo -e "\n${C_BOLD}Keybindings & Commands:${C_RESET}"
-echo -e "  ${C_MINT}omusic${C_RESET}             Open / toggle player"
+# Start omusic in the menubar right away
+pkill -f "omusic/app/main.py" 2>/dev/null || true
+nohup "${BIN_DIR}/omusic" --tray >/dev/null 2>&1 &
+
+echo -e "\n${C_MINT}${C_BOLD}✔ omusic is now running in your menu bar!${C_RESET}"
+echo -e "${C_DARK}Look at your top menu bar / system tray. Click the YouTube Music icon to drop down the player.${C_RESET}"
+echo -e "\n${C_BOLD}Menu Bar Controls:${C_RESET}"
+echo -e "  ${C_MINT}Click Icon${C_RESET}         Drop down / hide the player directly under your menu bar"
+echo -e "  ${C_MINT}Right-Click Icon${C_RESET}   Quick menu (Play/Pause, Next, Prev, Quit)"
+echo -e "  ${C_MINT}Autostart${C_RESET}          Automatically runs on system boot in your menu bar"
+echo -e "\n${C_BOLD}Hotkeys & Keybindings (Optional):${C_RESET}"
+echo -e "  ${C_MINT}omusic toggle${C_RESET}      Toggle dropdown via hotkey"
 echo -e "  ${C_MINT}omusic play-pause${C_RESET}  Toggle playback"
 echo -e "  ${C_MINT}omusic next${C_RESET}        Next track"
 echo -e "  ${C_MINT}omusic prev${C_RESET}        Previous track"
-echo -e "  ${C_MINT}Space${C_RESET}              Play / Pause in window"
-echo -e "  ${C_MINT}J / K${C_RESET}              Navigate queue"
-echo -e "  ${C_MINT}/${C_RESET}                  Focus search bar"
