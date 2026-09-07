@@ -56,14 +56,18 @@ fi
 echo -e "\n${C_BOLD}[2/3] Installing omusic binary...${C_RESET}"
 mkdir -p "${BIN_DIR}"
 
+# Stop any currently running instance so the file is not locked
+systemctl --user stop omusic.service 2>/dev/null || true
+pkill -9 -f "omusic" 2>/dev/null || true
+
 if [[ -f "target/release/omusic" ]]; then
-    cp "target/release/omusic" "${BIN_DIR}/omusic"
+    install -m 755 "target/release/omusic" "${BIN_DIR}/omusic"
 elif [[ -f "target/debug/omusic" ]]; then
-    cp "target/debug/omusic" "${BIN_DIR}/omusic"
+    install -m 755 "target/debug/omusic" "${BIN_DIR}/omusic"
 elif need_cmd cargo; then
     echo -e "${C_DARK}Compiling release binary...${C_RESET}"
     cargo build --release
-    cp "target/release/omusic" "${BIN_DIR}/omusic"
+    install -m 755 "target/release/omusic" "${BIN_DIR}/omusic"
 else
     echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
     RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
