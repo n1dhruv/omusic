@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# omusic — CLI launcher & controller
+set -eo pipefail
+
+APP_DIR="${HOME}/.local/share/omusic"
+VENV_PY="${APP_DIR}/venv/bin/python3"
+
+# If not running from installed location, allow running directly from git clone
+if [[ ! -f "${VENV_PY}" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    if [[ -f "${SCRIPT_DIR}/venv/bin/python3" ]]; then
+        VENV_PY="${SCRIPT_DIR}/venv/bin/python3"
+        APP_DIR="${SCRIPT_DIR}"
+    elif [[ -f "${HOME}/.local/share/omarchy-youtube-music/venv/bin/python" ]]; then
+        # Use existing user venv if available
+        VENV_PY="${HOME}/.local/share/omarchy-youtube-music/venv/bin/python"
+        APP_DIR="${SCRIPT_DIR}"
+    else
+        VENV_PY="python3"
+        APP_DIR="${SCRIPT_DIR}"
+    fi
+fi
+
+exec "${VENV_PY}" "${APP_DIR}/app/main.py" "$@"
