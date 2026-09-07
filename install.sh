@@ -130,11 +130,22 @@ fi
 # Configure Hyprland floating drop-down rule if Hyprland is present
 HYPR_CONFIG="${HOME}/.config/hypr/hyprland.lua"
 if [[ -f "${HYPR_CONFIG}" ]]; then
-    if ! grep -q 'o.window("^(omusic)$"' "${HYPR_CONFIG}"; then
-        echo -e "\n-- omusic: YouTube Music drop-down tray player\no.window(\"^(omusic)$\", { float = true, pin = true, tag = \"-default-opacity\" })" >> "${HYPR_CONFIG}"
-        if command -v hyprctl >/dev/null 2>&1; then
-            hyprctl reload >/dev/null 2>&1 || true
-        fi
+    # Remove any outdated omusic rule
+    sed -i '/o\.window("\^(omusic)\$"/d' "${HYPR_CONFIG}" 2>/dev/null || true
+    sed -i '/-- omusic: YouTube Music/d' "${HYPR_CONFIG}" 2>/dev/null || true
+    cat >> "${HYPR_CONFIG}" << 'EOF'
+
+-- omusic: YouTube Music drop-down tray player
+o.window("^(omusic)$", {
+  float = true,
+  pin = true,
+  move = { "(monitor_w-window_w-12)", "(monitor_h-window_h-38)" },
+  opacity = "1.0 1.0 override",
+  tag = "-default-opacity",
+})
+EOF
+    if command -v hyprctl >/dev/null 2>&1; then
+        hyprctl reload >/dev/null 2>&1 || true
     fi
 fi
 
