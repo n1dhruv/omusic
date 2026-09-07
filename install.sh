@@ -85,15 +85,19 @@ if [[ -f "${SRC_DIR}/target/release/omusic" ]]; then
     install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
 elif [[ -f "${SRC_DIR}/target/debug/omusic" ]]; then
     install -m 755 "${SRC_DIR}/target/debug/omusic" "${BIN_DIR}/omusic"
-elif need_cmd cargo; then
-    echo -e "${C_DARK}Compiling release binary with Cargo...${C_RESET}"
-    (cd "${SRC_DIR}" && cargo build --release)
-    install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
 else
     echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
     RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
-    curl -fsSL "${RELEASE_URL}" | tar -xz -C "${BIN_DIR}"
-    chmod +x "${BIN_DIR}/omusic"
+    if curl -fsSL "${RELEASE_URL}" | tar -xz -C "${BIN_DIR}" 2>/dev/null; then
+        chmod +x "${BIN_DIR}/omusic"
+    elif need_cmd cargo; then
+        echo -e "${C_DARK}Compiling release binary with Cargo...${C_RESET}"
+        (cd "${SRC_DIR}" && cargo build --release)
+        install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
+    else
+        echo -e "${C_RED}Error:${C_RESET} Failed to install omusic binary."
+        exit 1
+    fi
 fi
 
 # PURGE ANY OLD DESKTOP APPLICATION FILES (Ensures zero indexing in Rofi / GNOME / KDE)
