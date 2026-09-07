@@ -80,6 +80,7 @@ mkdir -p "${BIN_DIR}"
 systemctl --user stop omusic.service 2>/dev/null || true
 pkill -9 -f "omusic" 2>/dev/null || true
 sleep 0.5
+rm -f "${BIN_DIR}/omusic"
 
 if [[ -f "${SRC_DIR}/target/release/omusic" ]]; then
     install -m 755 "${SRC_DIR}/target/release/omusic" "${BIN_DIR}/omusic"
@@ -88,7 +89,7 @@ elif [[ -f "${SRC_DIR}/target/debug/omusic" ]]; then
 else
     echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
     RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
-    if curl -fsSL "${RELEASE_URL}" | tar -xz -C "${BIN_DIR}" 2>/dev/null; then
+    if curl -fsSL "${RELEASE_URL}" | tar --unlink-first -xz -C "${BIN_DIR}" 2>/dev/null; then
         chmod +x "${BIN_DIR}/omusic"
     elif need_cmd cargo; then
         echo -e "${C_DARK}Compiling release binary with Cargo...${C_RESET}"
