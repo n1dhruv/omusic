@@ -1,12 +1,5 @@
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.venv/
-env/
+target/
+**/*.rs.bk
+Cargo.lock
 *.log
 .DS_Store
-*.egg-info/
-dist/
-build/
-*.sock

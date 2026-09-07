@@ -4,21 +4,19 @@
 # ==============================================================================
 set -e
 
-INSTALL_DIR="${HOME}/.local/share/omusic"
-BIN_FILE="${HOME}/.local/bin/omusic"
-DESKTOP_FILE="${HOME}/.local/share/applications/omusic.desktop"
-AUTOSTART_FILE="${HOME}/.config/autostart/omusic.desktop"
-ICON_FILE="${HOME}/.local/share/icons/hicolor/scalable/apps/omusic.svg"
+# Stop and disable systemd user service
+systemctl --user disable --now omusic.service 2>/dev/null || true
+rm -f "${HOME}/.config/systemd/user/omusic.service"
+systemctl --user daemon-reload 2>/dev/null || true
 
-# Close any running instances
-pkill -f "omusic/app/main.py" 2>/dev/null || true
+# Terminate processes
+pkill -9 -f "omusic" 2>/dev/null || true
+pkill -9 -f "omusic-mpv.sock" 2>/dev/null || true
 
-# Remove files
-rm -rf "${INSTALL_DIR}"
-rm -f "${BIN_FILE}" "${DESKTOP_FILE}" "${AUTOSTART_FILE}" "${ICON_FILE}"
+# Remove binaries and any old files
+rm -f "${HOME}/.local/bin/omusic"
+rm -f "${HOME}/.local/share/applications/omusic.desktop"
+rm -f "${HOME}/.config/autostart/omusic.desktop"
+rm -f "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/omusic*
 
-if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
-fi
-
-echo "✔ omusic has been completely removed from your system."
+echo "✔ omusic has been completely removed from your menu bar and system."

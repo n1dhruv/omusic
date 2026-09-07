@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# omusic installer — universal Linux setup script
-# Works on Arch, Debian, Ubuntu, Fedora, openSUSE, and any standard Linux.
+# omusic installer — Rust Menu Bar Tray Applet
+# Zero desktop application files. Pure drop-down tray.
 # GitHub: https://github.com/n1dhruv/omusic
 # ==============================================================================
 set -e
 
-REPO_URL="https://github.com/n1dhruv/omusic.git"
-INSTALL_DIR="${HOME}/.local/share/omusic"
 BIN_DIR="${HOME}/.local/bin"
-DESKTOP_DIR="${HOME}/.local/share/applications"
-ICON_DIR="${HOME}/.local/share/icons/hicolor/scalable/apps"
+SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
+SERVICE_FILE="${SYSTEMD_USER_DIR}/omusic.service"
 
-# Color helpers
 C_RESET="\033[0m"
 C_BOLD="\033[1m"
 C_GREEN="\033[38;2;124;203;162m"
@@ -27,29 +24,10 @@ cat << "EOF"
 | (_) | | | | | | |_| \__ \ | (__ 
  \___/|_| |_| |_|\__,_|___/_|\___|
 EOF
-echo -e "${C_DARK}Universal Cyber-Minimal YouTube Music for Linux${C_RESET}\n"
+echo -e "${C_DARK}Cyber-Minimal YouTube Music Menu Bar Tray for Linux (Rust)${C_RESET}\n"
 
-# 1. Detect environment & repo source
-TMP_CLONE=""
-if [[ -f "app/main.py" && -f "backend/backend.py" ]]; then
-    echo -e "${C_GREEN}✔${C_RESET} Installing from local repository..."
-    SRC_DIR="$(pwd)"
-else
-    echo -e "${C_GREEN}✔${C_RESET} Downloading omusic from GitHub..."
-    TMP_CLONE="$(mktemp -d -t omusic-install-XXXXXX)"
-    git clone --depth=1 "${REPO_URL}" "${TMP_CLONE}"
-    SRC_DIR="${TMP_CLONE}"
-fi
-
-cleanup() {
-    if [[ -n "${TMP_CLONE}" && -d "${TMP_CLONE}" ]]; then
-        rm -rf "${TMP_CLONE}"
-    fi
-}
-trap cleanup EXIT
-
-# 2. Distro Package Installation
-echo -e "\n${C_BOLD}[1/4] Checking system dependencies...${C_RESET}"
+# 1. Dependency checks
+echo -e "${C_BOLD}[1/3] Checking system dependencies...${C_RESET}"
 MISSING_PKGS=()
 
 need_cmd() {
@@ -58,64 +36,63 @@ need_cmd() {
 
 if ! need_cmd mpv; then MISSING_PKGS+=("mpv"); fi
 if ! need_cmd yt-dlp; then MISSING_PKGS+=("yt-dlp"); fi
-if ! need_cmd python3; then MISSING_PKGS+=("python3"); fi
 
 if [[ ${#MISSING_PKGS[@]} -gt 0 ]]; then
-    echo -e "${C_DARK}Missing packages: ${MISSING_PKGS[*]}${C_RESET}"
+    echo -e "${C_DARK}Installing missing packages: ${MISSING_PKGS[*]}${C_RESET}"
     if need_cmd pacman; then
-        echo -e "${C_GREEN}→${C_RESET} Installing via pacman..."
-        sudo pacman -S --needed --noconfirm "${MISSING_PKGS[@]}" python-pip git
+        sudo pacman -S --needed --noconfirm "${MISSING_PKGS[@]}"
     elif need_cmd apt-get; then
-        echo -e "${C_GREEN}→${C_RESET} Installing via apt-get..."
-        sudo apt-get update -y
-        sudo apt-get install -y "${MISSING_PKGS[@]}" python3-pip python3-venv git
+        sudo apt-get update -y && sudo apt-get install -y "${MISSING_PKGS[@]}"
     elif need_cmd dnf; then
-        echo -e "${C_GREEN}→${C_RESET} Installing via dnf..."
-        sudo dnf install -y "${MISSING_PKGS[@]}" python3-pip git
+        sudo dnf install -y "${MISSING_PKGS[@]}"
     elif need_cmd zypper; then
-        echo -e "${C_GREEN}→${C_RESET} Installing via zypper..."
-        sudo zypper install -y "${MISSING_PKGS[@]}" python3-pip git
-    else
-        echo -e "${C_RED}Warning:${C_RESET} Unknown package manager. Please ensure mpv, yt-dlp, and python3-venv are installed."
+        sudo zypper install -y "${MISSING_PKGS[@]}"
     fi
 else
-    echo -e "${C_GREEN}✔${C_RESET} All system packages present."
+    echo -e "${C_GREEN}✔${C_RESET} All runtime dependencies present (mpv, yt-dlp)."
 fi
 
-# 3. Copy files to ~/.local/share/omusic
-echo -e "\n${C_BOLD}[2/4] Deploying application files...${C_RESET}"
-mkdir -p "${INSTALL_DIR}"
-rm -rf "${INSTALL_DIR}/app" "${INSTALL_DIR}/backend"
-cp -r "${SRC_DIR}/app" "${INSTALL_DIR}/"
-cp -r "${SRC_DIR}/backend" "${INSTALL_DIR}/"
-cp "${SRC_DIR}/backend/backend.py" "${INSTALL_DIR}/backend.py"
-chmod +x "${INSTALL_DIR}/backend.py"
+# 2. Binary Installation
+echo -e "\n${C_BOLD}[2/3] Installing omusic binary...${C_RESET}"
+mkdir -p "${BIN_DIR}"
 
-# 4. Set up Python venv
-echo -e "\n${C_BOLD}[3/4] Configuring Python environment with PyQt6...${C_RESET}"
-if [[ ! -d "${INSTALL_DIR}/venv" ]]; then
-    python3 -m venv "${INSTALL_DIR}/venv"
+if [[ -f "target/release/omusic" ]]; then
+    cp "target/release/omusic" "${BIN_DIR}/omusic"
+elif [[ -f "target/debug/omusic" ]]; then
+    cp "target/debug/omusic" "${BIN_DIR}/omusic"
+elif need_cmd cargo; then
+    echo -e "${C_DARK}Compiling release binary...${C_RESET}"
+    cargo build --release
+    cp "target/release/omusic" "${BIN_DIR}/omusic"
+else
+    echo -e "${C_DARK}Downloading pre-built release binary from GitHub...${C_RESET}"
+    RELEASE_URL="https://github.com/n1dhruv/omusic/releases/latest/download/omusic-linux-x86_64.tar.gz"
+    curl -fsSL "${RELEASE_URL}" | tar -xz -C "${BIN_DIR}"
 fi
-"${INSTALL_DIR}/venv/bin/pip" install --quiet --upgrade pip
-"${INSTALL_DIR}/venv/bin/pip" install --quiet -r "${INSTALL_DIR}/backend/requirements.txt"
-echo -e "${C_GREEN}✔${C_RESET} Python dependencies installed."
-
-AUTOSTART_DIR="${HOME}/.config/autostart"
-
-# 5. Install launcher, menubar autostart & desktop integration
-echo -e "\n${C_BOLD}[4/4] Setting up menu bar integration & autostart...${C_RESET}"
-mkdir -p "${BIN_DIR}" "${DESKTOP_DIR}" "${ICON_DIR}" "${AUTOSTART_DIR}"
-
-cp "${SRC_DIR}/bin/omusic" "${BIN_DIR}/omusic"
 chmod +x "${BIN_DIR}/omusic"
 
-cp "${SRC_DIR}/desktop/omusic.desktop" "${DESKTOP_DIR}/omusic.desktop"
-cp "${SRC_DIR}/desktop/omusic.desktop" "${AUTOSTART_DIR}/omusic.desktop"
-cp "${SRC_DIR}/desktop/omusic.svg" "${ICON_DIR}/omusic.svg"
+# PURGE ANY OLD DESKTOP APPLICATION FILES (Ensures zero indexing in Rofi / GNOME / KDE)
+rm -f "${HOME}/.local/share/applications/omusic.desktop"
+rm -f "${HOME}/.config/autostart/omusic.desktop"
 
-if need_cmd update-desktop-database; then
-    update-desktop-database "${DESKTOP_DIR}" >/dev/null 2>&1 || true
-fi
+# 3. Systemd User Service (Background tray autostart without desktop files)
+echo -e "\n${C_BOLD}[3/3] Configuring menu bar tray service...${C_RESET}"
+mkdir -p "${SYSTEMD_USER_DIR}"
+
+cat > "${SERVICE_FILE}" << EOF
+[Unit]
+Description=omusic — YouTube Music Menu Bar Drop-Down Tray Applet
+After=graphical-session.target
+
+[Service]
+ExecStart=${BIN_DIR}/omusic
+Restart=on-failure
+RestartSec=2
+Environment="PATH=${PATH}"
+
+[Install]
+WantedBy=graphical-session.target
+EOF
 
 # Ensure ~/.local/bin is in PATH
 SHELL_CONFIG=""
@@ -129,23 +106,14 @@ if [[ ":$PATH:" != *":${BIN_DIR}:"* ]]; then
     if [[ -n "${SHELL_CONFIG}" && -f "${SHELL_CONFIG}" ]]; then
         if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "${SHELL_CONFIG}"; then
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "${SHELL_CONFIG}"
-            echo -e "${C_GREEN}✔${C_RESET} Added ~/.local/bin to PATH in ${SHELL_CONFIG}"
         fi
     fi
 fi
 
-# Start omusic in the menubar right away
-pkill -f "omusic/app/main.py" 2>/dev/null || true
-nohup "${BIN_DIR}/omusic" --tray </dev/null >/dev/null 2>&1 & disown
+# Enable and start systemd user service
+systemctl --user daemon-reload
+systemctl --user enable --now omusic.service
 
-echo -e "\n${C_MINT}${C_BOLD}✔ omusic is now running in your menu bar!${C_RESET}"
-echo -e "${C_DARK}Look at your top menu bar / system tray. Click the YouTube Music icon to drop down the player.${C_RESET}"
-echo -e "\n${C_BOLD}Menu Bar Controls:${C_RESET}"
-echo -e "  ${C_MINT}Click Icon${C_RESET}         Drop down / hide the player directly under your menu bar"
-echo -e "  ${C_MINT}Right-Click Icon${C_RESET}   Quick menu (Play/Pause, Next, Prev, Quit)"
-echo -e "  ${C_MINT}Autostart${C_RESET}          Automatically runs on system boot in your menu bar"
-echo -e "\n${C_BOLD}Hotkeys & Keybindings (Optional):${C_RESET}"
-echo -e "  ${C_MINT}omusic toggle${C_RESET}      Toggle dropdown via hotkey"
-echo -e "  ${C_MINT}omusic play-pause${C_RESET}  Toggle playback"
-echo -e "  ${C_MINT}omusic next${C_RESET}        Next track"
-echo -e "  ${C_MINT}omusic prev${C_RESET}        Previous track"
+echo -e "\n${C_MINT}${C_BOLD}✔ omusic is now active in your menu bar!${C_RESET}"
+echo -e "${C_DARK}Look at your top menu bar / system tray. Click the icon to drop down the player.${C_RESET}"
+echo -e "${C_DARK}Zero desktop application files installed — it lives exclusively in the menu bar.${C_RESET}"

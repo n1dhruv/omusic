@@ -1,130 +1,64 @@
 # omusic
 
 <p align="center">
-  <img src="desktop/omusic.svg" width="96" height="96" alt="omusic logo" />
+  <img src="icons/tray.png" width="80" height="80" alt="omusic logo" />
 </p>
 
 <p align="center">
-  <b>A cyber-minimal YouTube Music Menu Bar Applet for Linux.</b><br>
-  Sits seamlessly in your top menu bar / system tray. Click to drop down the player.<br>
-  Works natively across <b>Arch, Debian, Ubuntu, Fedora, openSUSE</b>, and any modern Linux distribution.
+  <b>A cyber-minimal YouTube Music Menu Bar Drop-Down Tray Applet for Linux (Built in Rust).</b><br>
+  Lives purely in your top menu bar / system tray. Zero desktop application files.<br>
+  Works seamlessly across <b>Arch, Debian, Ubuntu, Fedora, openSUSE</b>, and modern window managers.
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/language-Rust-orange?style=flat-square&logo=rust" alt="Rust" />
   <img src="https://img.shields.io/badge/platform-Linux-7ccba2?style=flat-square" alt="Platform Linux" />
-  <img src="https://img.shields.io/badge/toolkit-PyQt6-a5e5bf?style=flat-square" alt="PyQt6" />
+  <img src="https://img.shields.io/badge/framework-Tauri_v2-a5e5bf?style=flat-square" alt="Tauri v2" />
   <img src="https://img.shields.io/badge/license-MIT-7ccba2?style=flat-square" alt="License MIT" />
 </p>
 
 ---
 
-## ✨ Features
+## ✨ Why omusic?
 
-- 🎨 **Aesthetic Cyber-Dark UI** — Deep charcoal background with emerald & mint accents (`#0b1511` palette).
-- 🖼️ **Ambient Album Art Glow** — Dynamic backdrop glow subtly reflecting the currently playing track.
-- ⚡ **Ultra-Fast Search & Pagination** — Instant YouTube Music search with "Load more" streaming results.
-- 📻 **Auto-Radio Playlist** — Automatically cues related songs based on your selection.
-- 🎚️ **Interactive Drag & Drop Queue** — Reorder tracks by grabbing the right-hand grip handle with edge auto-scrolling at 60 FPS.
-- 📜 **Silky Smooth Scrollbar** — Hover-expanding reactive scrollbar with 2-finger touchpad gestures.
-- 🪟 **Collapsible Mini-Player Mode** — Drop down to a sleek 76px compact bar whenever you need screen space.
-- ⌨️ **Vim-Style & Command Keybindings** — Total keyboard navigability.
-- 🚀 **Instant CLI & IPC Control** — Single-instance architecture with hotkey support (`omusic toggle`, `omusic next`, etc.).
+- 🪟 **Zero Desktop Application Clutter** — Does **not** install `.desktop` files in your app launcher. Rofi, Wofi, GNOME, and KDE will never list it as an application. It lives purely in your menu bar.
+- 🎯 **Drop-Down Tray Panel** — Clicking the menu bar icon drops down the player panel directly beneath it. Click outside to dismiss.
+- 🛡️ **Linux Kernel Process Safety (`PR_SET_PDEATHSIG`)** — Built in Rust; `mpv` audio playback is tied directly to the parent process via Linux kernel `prctl`. Orphaned audio playback is physically impossible.
+- 🎨 **Dark Cyber Aesthetic** — Signature `#0b1511` palette, glowing album artwork, bouncing equalizers, and mint accents (`#7ccba2`, `#a5e5bf`).
+- 🎚️ **Interactive Drag & Drop Queue** — Reorder tracks via the right-hand grip handle (`󰇡`) with 60 FPS edge scrolling.
+- 📜 **Silky Smooth Scrollbar** — Hover-expanding reactive scrollbar (3.5px → 6px).
+- 🗕 **Collapsible Mini-Player Mode** — Drop down to a 76px compact bar whenever you need screen real estate.
+- 🚀 **Systemd User Service Autostart** — Automatically starts on login in the background without user intervention.
 
 ---
 
-## 📦 Quick Installation
+## 📦 1-Line Universal Installation
 
-### Universal 1-Line Installer (Recommended)
-Open your terminal and run:
+To install `omusic` directly into your menu bar:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/n1dhruv/omusic/main/install.sh | bash
 ```
 
-The script automatically detects your distribution (Arch, Debian, Ubuntu, Fedora), installs system requirements (`mpv`, `yt-dlp`), sets up an isolated Python venv with PyQt6, creates the launcher at `~/.local/bin/omusic`, and integrates your desktop application menu.
-
 ---
 
-### Manual Installation (From Source)
+## 🎮 Controls
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/n1dhruv/omusic.git
-cd omusic
+### Menu Bar Interaction
+- **Click Tray Icon**: Drop down or dismiss the music player panel.
+- **Right-Click Tray Icon**: Quick context menu (*Play / Pause*, *Quit omusic*).
 
-# 2. Run the installer
-chmod +x install.sh
-./install.sh
-```
-
----
-
-## 🎮 Usage & CLI Control
-
-You can launch `omusic` from your application runner (Rofi, Wofi, GNOME, KDE) or via terminal:
-
-```bash
-omusic               # Launch or toggle player window
-```
-
-### Hotkey & Media Control Commands
-
-Bind these to your favorite window manager keys (e.g., Hyprland, Sway, i3):
-
-| Command | Action |
-|:---|:---|
-| `omusic` or `omusic toggle` | Toggle the player window (open / hide) |
-| `omusic play-pause` | Toggle play / pause |
-| `omusic next` | Skip to next track |
-| `omusic prev` | Go to previous track |
-| `omusic mute` | Toggle mute |
-| `omusic shuffle` | Toggle shuffle mode |
-| `omusic repeat` | Toggle repeat mode |
-| `omusic volume 80` | Set volume level (0-100) |
-| `omusic quit` | Close background player |
-
----
-
-## ⌨️ In-App Keyboard Shortcuts
-
-When the player window is active:
-
+### In-App Keybindings
 | Key | Action |
 |:---|:---|
 | <kbd>Space</kbd> | Play / Pause |
-| <kbd>/</kbd> | Focus search input |
-| <kbd>J</kbd> or <kbd>↓</kbd> | Navigate down through queue |
-| <kbd>K</kbd> or <kbd>↑</kbd> | Navigate up through queue |
-| <kbd>Enter</kbd> | Play selected track |
-| <kbd>N</kbd> | Next song |
-| <kbd>P</kbd> | Previous song |
+| <kbd>/</kbd> | Focus search bar |
+| <kbd>J</kbd> or <kbd>↓</kbd> | Next song in queue |
+| <kbd>K</kbd> or <kbd>↑</kbd> | Previous song in queue |
 | <kbd>S</kbd> | Toggle shuffle |
 | <kbd>R</kbd> | Toggle repeat |
 | <kbd>M</kbd> | Toggle mute |
-| <kbd>Esc</kbd> | Unfocus search / Close player |
-
----
-
-## 🖥️ Window Manager Integration
-
-### Hyprland (`~/.config/hypr/hyprland.conf`)
-```ini
-# Toggle omusic window with Super + M
-bind = $mainMod, M, exec, omusic toggle
-
-# Media control keys
-bindl = , XF86AudioPlay, exec, omusic play-pause
-bindl = , XF86AudioNext, exec, omusic next
-bindl = , XF86AudioPrev, exec, omusic prev
-```
-
-### i3 / Sway (`~/.config/i3/config`)
-```ini
-bindsym $mod+m exec omusic toggle
-bindsym XF86AudioPlay exec omusic play-pause
-bindsym XF86AudioNext exec omusic next
-bindsym XF86AudioPrev exec omusic prev
-```
+| <kbd>Esc</kbd> | Dismiss dropdown window |
 
 ---
 
@@ -133,14 +67,11 @@ bindsym XF86AudioPrev exec omusic prev
 To cleanly remove `omusic`:
 
 ```bash
-cd omusic && ./uninstall.sh
-# OR manually:
-rm -rf ~/.local/share/omusic ~/.local/bin/omusic ~/.local/share/applications/omusic.desktop
+curl -fsSL https://raw.githubusercontent.com/n1dhruv/omusic/main/uninstall.sh | bash
 ```
 
 ---
 
 ## 📄 License
 
-Distributed under the [MIT License](LICENSE). Built with Python 3, PyQt6, and mpv.
-Made with ❤️ by [Dhruv](https://github.com/n1dhruv).
+Distributed under the [MIT License](LICENSE). Built with ❤️ by [Dhruv](https://github.com/n1dhruv).

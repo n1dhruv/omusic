@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>omusic</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="backdrop" class="ambient-backdrop"></div>
+
+  <div id="app" class="card-container">
+    <!-- FULL PLAYER VIEW -->
+    <div id="full-player" class="full-layout">
+      <!-- LEFT SEARCH PANE (270px) -->
+      <aside class="search-pane">
+        <div class="section-label">SEARCH</div>
+        <div class="search-input-box">
+          <span id="search-icon" class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search YouTube Music..." autocomplete="off" />
+          <button id="search-clear" class="btn-clear hidden">✕</button>
+        </div>
+        <div class="keyboard-hint">Enter Search · Click song to play</div>
+
+        <div id="results-header" class="section-label hidden">RESULTS (0)</div>
+        <div id="results-scroll" class="results-scroll custom-scrollbar hidden">
+          <div id="results-list" class="results-list"></div>
+          <button id="btn-load-more" class="btn-load-more hidden">+ Load more songs</button>
+        </div>
+        <div id="search-placeholder" class="placeholder-box">
+          Type a query and press Enter to search.
+        </div>
+      </aside>
+
+      <!-- DIVIDER -->
+      <div class="pane-divider"></div>
+
+      <!-- RIGHT PLAYER STAGE -->
+      <main class="player-stage">
+        <!-- Header -->
+        <div class="stage-header">
+          <div class="header-left">
+            <span id="player-label" class="section-label">PLAYER</span>
+            <div id="header-eq" class="equalizer-bars hidden">
+              <span class="bar b1"></span>
+              <span class="bar b2"></span>
+              <span class="bar b3"></span>
+            </div>
+          </div>
+          <button id="btn-mini-mode" class="btn-icon" title="Mini player mode">🗕</button>
+        </div>
+
+        <!-- Album Artwork -->
+        <div class="art-wrapper">
+          <div id="artwork-glow" class="art-glow"></div>
+          <div id="artwork-box" class="artwork-container">
+            <img id="artwork-img" class="art-img hidden" alt="Artwork" />
+            <div id="artwork-fallback" class="art-fallback">♪</div>
+          </div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="metadata-wrapper">
+          <div id="track-title" class="track-title">YouTube Music</div>
+          <div id="track-artist" class="track-artist">Search or select a song to begin</div>
+        </div>
+
+        <!-- Transport Controls -->
+        <div class="controls-row">
+          <button id="btn-shuffle" class="btn-ctrl" title="Shuffle">🔀</button>
+          <button id="btn-prev" class="btn-ctrl" title="Previous">⏮</button>
+          <button id="btn-play" class="btn-play" title="Play / Pause">▶</button>
+          <button id="btn-next" class="btn-ctrl" title="Next">⏭</button>
+          <button id="btn-repeat" class="btn-ctrl" title="Repeat">🔁</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+          <div id="progress-track" class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+            <div id="progress-knob" class="progress-knob"></div>
+          </div>
+          <div class="timestamps-row">
+            <span id="pos-label">0:00</span>
+            <span id="dur-label">0:00</span>
+          </div>
+        </div>
+
+        <!-- Volume Row -->
+        <div class="volume-row">
+          <button id="btn-mute" class="btn-icon" title="Mute">🔊</button>
+          <input type="range" id="volume-slider" min="0" max="100" value="100" class="vol-slider" />
+          <span id="volume-label" class="vol-pct">100%</span>
+        </div>
+
+        <div class="sub-divider"></div>
+
+        <!-- Queue Section -->
+        <div class="queue-header">
+          <span id="queue-title" class="section-label">Queue</span>
+          <button id="btn-clear-queue" class="btn-text-subtle hidden">Clear</button>
+        </div>
+
+        <div id="queue-scroll" class="queue-scroll custom-scrollbar">
+          <div id="queue-list" class="queue-list"></div>
+          <div id="queue-empty" class="queue-empty-label">
+            Queue is empty. Search for a song or click + to add.
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- MINI PLAYER VIEW (76px) -->
+    <div id="mini-player" class="mini-layout hidden">
+      <img id="mini-thumb" class="mini-thumb" alt="Thumb" />
+      <div class="mini-info">
+        <div id="mini-title" class="mini-title">YouTube Music</div>
+        <div id="mini-sub" class="mini-sub">Idle</div>
+      </div>
+      <div class="mini-controls">
+        <button id="mini-prev" class="btn-mini-ctrl">⏮</button>
+        <button id="mini-play" class="btn-mini-play">▶</button>
+        <button id="mini-next" class="btn-mini-ctrl">⏭</button>
+      </div>
+      <button id="mini-expand" class="btn-icon" title="Expand player">🗖</button>
+      <div id="mini-progress-line" class="mini-progress"></div>
+    </div>
+
+    <!-- BOTTOM KEYBOARD HINTS BAR -->
+    <footer class="bottom-hints-bar">
+      <div class="hints-list">
+        <span class="key">Space</span><span class="desc">Play/Pause</span>
+        <span class="key">J/K</span><span class="desc">Navigate</span>
+        <span class="key">Enter</span><span class="desc">Play</span>
+        <span class="key">/</span><span class="desc">Search</span>
+        <span class="key">Esc</span><span class="desc">Close</span>
+      </div>
+      <div class="branding">omusic</div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
