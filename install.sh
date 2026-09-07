@@ -6,6 +6,8 @@
 # ==============================================================================
 set -e
 
+export PATH="${HOME}/.cargo/bin:${HOME}/.local/bin:${PATH}"
+
 BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 SERVICE_FILE="${SYSTEMD_USER_DIR}/omusic.service"
